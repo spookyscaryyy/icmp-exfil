@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"log"
 
@@ -9,20 +8,7 @@ import (
 	"golang.org/x/net/ipv4"
 )
 
-const BUFFERSIZE = 1600
-const IPV4ICMP = 1
-const IPV4ICMPREQUEST = 8
-
-func main() {
-	var help = flag.Bool("h", false, "show help.")
-	var host = flag.String("l", "127.0.0.1", "the location ip to read from")
-
-	flag.Parse()
-
-	if *help {
-		flag.PrintDefaults()
-		return
-	}
+func recv(host *string) {
 	buf := make([]byte, BUFFERSIZE)
 	socket, sockErr := icmp.ListenPacket("ip4:icmp", *host)
 	if nil != sockErr {

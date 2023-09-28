@@ -1,35 +1,18 @@
-PROG_S = send
-PROG_R = recv
+PROGRAM = exfil
+SOURCE = *.go
 
-PROG_S_SRC = $(PROG_S)_src
-PROG_R_SRC = $(PROG_R)_src
+.PHONY: build clean fmt vet
 
-.PHONY: all send recv clean fmt vet
-
-all:
-	make $(PROG_S)
-	make $(PROG_R)
-
-send:
-	$(MAKE) -C $(PROG_S_SRC)
-	mv $(PROG_S_SRC)/$(PROG_S) .
-	mv $(PROG_S_SRC)/$(PROG_S).exe .
-
-recv:
-	$(MAKE) -C $(PROG_R_SRC)
-	mv $(PROG_R_SRC)/$(PROG_R) .
-	mv $(PROG_R_SRC)/$(PROG_R).exe .
+build:
+	CGO_ENABLED=0 go build -o $(PROGRAM) $(SOURCE)
+	GOOS=windows GOARCH=386 go build -o $(PROGRAM).exe $(SOURCE)
 
 clean:
-	rm -f $(PROG_S).exe
-	rm -f $(PROG_R).exe
-	rm -f $(PROG_S)
-	rm -f $(PROG_R)
+	rm -f $(PROGRAM).exe
+	rm -f $(PROGRAM)
 
 fmt:
-	gofmt -w $(PROG_S_SRC)/$(PROG_S).go
-	gofmt -w $(PROG_R_SRC)/$(PROG_R).go
+	gofmt -w $(SOURCE)
 
 vet:
-	go vet $(PROG_S_SRC)/$(PROG_S).go
-	go vet $(PROG_R_SRC)/$(PROG_R).go
+	go vet $(SOURCE)

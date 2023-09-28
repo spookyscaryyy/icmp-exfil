@@ -2,7 +2,6 @@
 !.gitignore
 !Makefile
 !*.go
-!send_src/
-!recv_src/
-!exfil/
 !*.md
+!*.mod
+!*.sum

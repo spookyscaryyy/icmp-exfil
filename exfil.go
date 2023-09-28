@@ -1,4 +1,4 @@
-package exfil
+package main
 
 import "encoding/binary"
 
