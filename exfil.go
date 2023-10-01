@@ -1,6 +1,8 @@
 package main
 
-import "encoding/binary"
+import (
+	"encoding/binary"
+)
 
 const FIRSTFLAGMASK = 0x01
 const LASTFLAGMASK = 0x02
@@ -25,6 +27,11 @@ func buildFlags(pak exfil) byte {
 	}
 
 	return flags
+}
+
+func parseFlags(flags byte, pak *exfil) {
+	pak.first = (flags&FIRSTFLAGMASK == 1)
+	pak.last = (flags&LASTFLAGMASK == 1)
 }
 
 func buildExfilPacket(pak exfil) []byte {
@@ -54,4 +61,18 @@ func buildExfilPacket(pak exfil) []byte {
 	copy(b[offset:offset+len(pak.data)], []byte(pak.data))
 
 	return b
+}
+
+func parseExfil(b []byte) exfil {
+	pak := exfil{false, false, "", nil}
+	offset := 1
+	parseFlags(b[0], &pak)
+	offset++
+
+	// read the file nama
+	if pak.first {
+
+	}
+
+	return pak
 }

