@@ -30,8 +30,8 @@ func buildFlags(pak exfil) byte {
 }
 
 func parseFlags(flags byte, pak *exfil) {
-	pak.first = (flags&FIRSTFLAGMASK == 1)
-	pak.last = (flags&LASTFLAGMASK == 1)
+	pak.first = (flags&FIRSTFLAGMASK != 0)
+	pak.last = (flags&LASTFLAGMASK != 0)
 }
 
 func buildExfilPacket(pak exfil) []byte {
@@ -65,14 +65,21 @@ func buildExfilPacket(pak exfil) []byte {
 
 func parseExfil(b []byte) exfil {
 	pak := exfil{false, false, "", nil}
-	offset := 1
+	offset := 0
 	parseFlags(b[0], &pak)
 	offset++
 
-	// read the file nama
+	// read the file name
 	if pak.first {
-
+		filenameLength := int(b[offset])
+		offset++
+		pak.filename = string(b[offset : offset+filenameLength])
+		offset += filenameLength
 	}
+
+	dataLength := int(binary.BigEndian.Uint16(b[offset : offset+2]))
+	offset += 2
+	pak.data = b[offset : offset+dataLength]
 
 	return pak
 }

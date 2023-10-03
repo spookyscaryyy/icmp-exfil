@@ -5,3 +5,7 @@
 !*.md
 !*.mod
 !*.sum
+!test/
+!test/long.txt
+!test/medium.txt
+!test/short.txt
