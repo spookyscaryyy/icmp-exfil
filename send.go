@@ -34,7 +34,7 @@ func send(file *string, debug *bool, host *string) {
 	if nil != resErr {
 		log.Fatalln(resErr)
 	}
-	socket, sockErr := icmp.ListenPacket("ip4:icmp", addr.String())
+	socket, sockErr := icmp.ListenPacket("ip4:icmp", "")
 	if sockErr != nil {
 		log.Fatalln(sockErr)
 		return
@@ -73,6 +73,6 @@ func send(file *string, debug *bool, host *string) {
 	echoPak.Data = pak
 	fullPak.Body = icmp.MessageBody(&echoPak)
 	b, _ = fullPak.Marshal(nil)
-	socket.WriteTo(b, socket.LocalAddr())
+	socket.WriteTo(b, addr)
 	return
 }

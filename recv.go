@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"net"
 	"os"
 
 	"golang.org/x/net/icmp"
@@ -12,11 +11,7 @@ import (
 
 func recv(host *string) {
 	buf := make([]byte, BUFFERSIZE+64)
-	addr, resErr := net.ResolveIPAddr("ip4:icmp", *host)
-	if nil != resErr {
-		log.Fatalln(resErr)
-	}
-	socket, sockErr := icmp.ListenPacket("ip4:icmp", addr.String())
+	socket, sockErr := icmp.ListenPacket("ip4:icmp", "")
 	if nil != sockErr {
 		log.Fatalln(sockErr)
 		return
