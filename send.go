@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net"
 	"os"
 	"path/filepath"
 
@@ -29,7 +30,11 @@ func send(file *string, debug *bool, host *string) {
 	fullPak := icmp.Message{Type: ipv4.ICMPType(IPV4ICMPREQUEST), Code: 1, Checksum: 0, Body: &echoPak}
 
 	// open up the "socket"
-	socket, sockErr := icmp.ListenPacket("ip4:icmp", *host)
+	addr, resErr := net.ResolveIPAddr("ip4:icmp", *host)
+	if nil != resErr {
+		log.Fatalln(resErr)
+	}
+	socket, sockErr := icmp.ListenPacket("ip4:icmp", addr.String())
 	if sockErr != nil {
 		log.Fatalln(sockErr)
 		return
