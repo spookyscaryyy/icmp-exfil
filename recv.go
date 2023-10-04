@@ -9,7 +9,7 @@ import (
 	"golang.org/x/net/ipv4"
 )
 
-func recv(host *string) {
+func recv() {
 	buf := make([]byte, BUFFERSIZE+64)
 	socket, sockErr := icmp.ListenPacket("ip4:icmp", "")
 	if nil != sockErr {

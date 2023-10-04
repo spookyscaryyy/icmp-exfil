@@ -32,7 +32,7 @@ func main() {
 		send(file, debug, host)
 		break
 	case "r":
-		recv(host)
+		recv()
 		break
 	default:
 		flag.PrintDefaults()
