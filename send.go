@@ -62,7 +62,7 @@ func send(file *string, debug *bool, host *string) {
 			log.Fatalln(marshErr)
 			return
 		}
-		socket.WriteTo(b, socket.LocalAddr())
+		socket.WriteTo(b, addr)
 		// wait for a reply
 		bytesRead, _, sockErr = socket.ReadFrom(b)
 		if nil != sockErr {
