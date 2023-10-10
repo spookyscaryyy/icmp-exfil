@@ -8,6 +8,7 @@ import (
 const BUFFERSIZE = 512
 const IPV4ICMP = 1
 const IPV4ICMPREQUEST = 8
+const IPV4ICMPREPLY = 0
 
 func main() {
 	var file = flag.String("f", "", "the file to exfiltrate via ICMP")

