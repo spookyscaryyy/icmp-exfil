@@ -5,11 +5,11 @@ This program abuses ICMP to send file data over the network.
 ICMP is a great choice for this because of the widespread support it has and
 the fact that ECHO REPLY/REQUEST is fairly harmless looking on the surface
 
-## Why not ICMP Message?
-Cause that would be too easy! Besides, it wouldn't be very discrete. People ping stuff all the time
-so it might go under the radar. Echo also has the advantage of a built in ACK system so we can
-always know if a message was sent or not and resend if needed to make sure the file makes it
-to the destination. I will also be abusing the identifier field to determine this protocol is being used
+## NOTES
+* This has not been tested on sending files between devices on different networks.
+* This has been tested on sending files between devices on the same network.
+* This is not perfectly reliable, but is generally pretty good
+* Windows seesm to like changing the ID of ICMP requests so Windows is assumed to not be supported
 
 ## Explanation of packet structure
 Since ICMP limits the data field size, the contents of the file will be sent
